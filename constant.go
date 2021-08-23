@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-18 16:21:34
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-20 16:03:57
+ * @LastEditTime: 2021-08-23 11:43:36
  * @FilePath: /coredns/plugin/wormhole/constant.go
  * @Description: 常量定义
  */
@@ -28,6 +28,15 @@ const Config_Key_RetryInterval = "RetryInterval"
 const Config_Key_Policy = "Policy"
 
 const Config_Key_DisableAutoUpdate = "DisableAutoUpdate"
+
+const Config_Key_RouterOS = "ROS"
+const Config_Key_RouterOS_Timeout = "ROS_Timeout"
+const Config_Key_RouterOS_Enabled_IPV6 = "ROS_Enabled_Ipv6"
+
+const Config_Key_Router_Host = "Host"
+const Config_Key_Router_Username = "Username"
+const Config_Key_Router_Password = "Password"
+const Config_Key_Router_ListName = "ListName"
 
 const Config_List_Key_Clash = "clash"
 const Config_List_Key_Dnsmasq = "dnsmasq"

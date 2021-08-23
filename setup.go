@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-13 11:48:18
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-20 17:36:54
+ * @LastEditTime: 2021-08-23 10:29:20
  * @FilePath: /coredns/plugin/wormhole/setup.go
  * @Description: 配置读取配置文件初始化插件
  */
@@ -89,9 +89,13 @@ func parseConfig(cfg *WormholeConfig) (*Wormhole, error) {
 	w.RuleList = append(w.RuleList, ruleList...)
 	w.IgnoreRuleList = append(w.IgnoreRuleList, ignoreRuleList...)
 
-	w.config = cfg
-
 	w.policy = parsePolicy(cfg)
+
+	if cfg.ROSConfig != nil {
+		w.ros = NewRouterOS(cfg.ROSConfig)
+	}
+
+	w.config = cfg
 
 	return w, nil
 }

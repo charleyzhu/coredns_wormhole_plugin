@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-13 11:53:13
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-21 08:56:22
+ * @LastEditTime: 2021-08-23 11:26:49
  * @FilePath: /coredns/plugin/wormhole/wormhole.go
  * @Description: 插件主题结构
  */
@@ -23,8 +23,6 @@ import (
 	"github.com/miekg/dns"
 )
 
-var defaultTimeout = 5 * time.Second
-
 func NewWormhole() *Wormhole {
 	c := &Wormhole{}
 	return c
@@ -44,6 +42,7 @@ type Wormhole struct {
 	fileUpdateTicker *time.Ticker
 
 	config *WormholeConfig
+	ros    *RouterOS
 
 	Next plugin.Handler
 }
@@ -107,6 +106,14 @@ func (wh *Wormhole) QueryAndWriteMsg(ctx context.Context, w dns.ResponseWriter, 
 		log.Warningf("Query form remote server find error:%s", err)
 		return plugin.NextOrFailure(pluginName, wh.Next, ctx, w, r)
 	}
+
+	if wh.ros != nil {
+		err := wh.ros.AddAddress(msg)
+		if err != nil {
+			log.Errorf("Add %s to ros %s find error:%s", msg, wh.ros.config.Host, err)
+		}
+	}
+
 	w.WriteMsg(msg)
 	return 0, nil
 }

@@ -14,6 +14,10 @@ func parsePluginConfiguration(c *caddy.Controller) (*WormholeConfig, error) {
 	toHost := c.RemainingArgs()
 	config.RemoteServers = toHost
 
+	rosTimeOut := "0"
+
+	rosEnabledIPV6 := false
+
 	for c.NextBlock() {
 		switch c.Val() {
 		case Config_Key_List:
@@ -181,6 +185,45 @@ func parsePluginConfiguration(c *caddy.Controller) (*WormholeConfig, error) {
 
 		case Config_Key_DisableAutoUpdate:
 			config.EnableAutoUpdate = false
+		case Config_Key_RouterOS:
+			rosArgs := c.RemainingArgs()
+
+			if len(rosArgs) != 4 {
+				log.Warning("Please enter the correct parameters")
+				continue
+			}
+
+			ros := &RouterOSConfig{
+				Host:     rosArgs[0],
+				Username: rosArgs[1],
+				Password: rosArgs[2],
+				ListName: rosArgs[3],
+			}
+
+			ros.AddressTimeOut = rosTimeOut
+			ros.Enabled_IPV6 = rosEnabledIPV6
+
+			config.ROSConfig = ros
+		case Config_Key_RouterOS_Timeout:
+			rosTimeoutArgs := c.RemainingArgs()
+			if len(rosTimeoutArgs) <= 0 {
+				log.Warning("Please enter Policy Parameters")
+				continue
+			}
+
+			if config.ROSConfig != nil {
+				config.ROSConfig.AddressTimeOut = rosTimeoutArgs[0]
+			} else {
+				rosTimeOut = rosTimeoutArgs[0]
+			}
+
+		case Config_Key_RouterOS_Enabled_IPV6:
+
+			if config.ROSConfig != nil {
+				config.ROSConfig.Enabled_IPV6 = true
+			} else {
+				rosEnabledIPV6 = true
+			}
 		}
 	}
 

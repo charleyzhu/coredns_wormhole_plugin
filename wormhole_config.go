@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-18 15:26:38
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-20 16:02:47
+ * @LastEditTime: 2021-08-23 11:26:06
  * @FilePath: /coredns/plugin/wormhole/wormhole_config.go
  * @Description: 配置模型定义
  */
@@ -52,4 +52,15 @@ type WormholeConfig struct {
 	ListRenewalRetryInterval time.Duration //遇到错误以后重试的间隔时间
 
 	EnableAutoUpdate bool // 是否开启自动更新
+
+	ROSConfig *RouterOSConfig
+}
+
+type RouterOSConfig struct {
+	Host           string
+	Username       string
+	Password       string
+	ListName       string
+	AddressTimeOut string
+	Enabled_IPV6   bool
 }
