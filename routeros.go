@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-23 09:56:26
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-25 10:55:19
+ * @LastEditTime: 2021-08-25 11:42:34
  * @FilePath: /coredns/plugin/wormhole/routeros.go
  * @Description: ROS 相关定义
  */
@@ -71,14 +71,18 @@ func (ros *RouterOS) AddCIDRAddress(address, timeout, comment string) error {
 	}
 	defer client.Close()
 
-	if ros.config.Enabled_IPV6 && strings.Contains(address, ":") {
-		_, err = client.Run("/ipv6/firewall/address-list/add", fmt.Sprintf("=address=%s", address), fmt.Sprintf("=list=%s", ros.config.ListName), fmt.Sprintf("=timeout=%s", timeout), fmt.Sprintf("=comment=%s", "CIDR Form: "+comment))
-		if err != nil {
-			if err.Error() == "from RouterOS device: failure: already have such entry" {
-				return nil
-			}
-			return fmt.Errorf("run AddCIDRAddress ipv6 command routeros %s rind error %s", ros.config.Host, err)
+	isIPV6 := strings.Contains(address, ":")
 
+	if isIPV6 {
+		if ros.config.Enabled_IPV6 {
+			_, err = client.Run("/ipv6/firewall/address-list/add", fmt.Sprintf("=address=%s", address), fmt.Sprintf("=list=%s", ros.config.ListName), fmt.Sprintf("=timeout=%s", timeout), fmt.Sprintf("=comment=%s", "CIDR Form: "+comment))
+			if err != nil {
+				if err.Error() == "from RouterOS device: failure: already have such entry" {
+					return nil
+				}
+				return fmt.Errorf("run AddCIDRAddress ipv6 command routeros %s rind error %s", ros.config.Host, err)
+
+			}
 		}
 	} else {
 		_, err = client.Run("/ip/firewall/address-list/add", fmt.Sprintf("=address=%s", address), fmt.Sprintf("=list=%s", ros.config.ListName), fmt.Sprintf("=timeout=%s", timeout), fmt.Sprintf("=comment=%s", "CIDR Form: "+comment))
