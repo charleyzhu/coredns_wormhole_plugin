@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-13 11:53:13
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-25 10:46:07
+ * @LastEditTime: 2021-08-25 10:59:28
  * @FilePath: /coredns/plugin/wormhole/wormhole.go
  * @Description: 插件主题结构
  */
@@ -285,9 +285,9 @@ func (wh *Wormhole) updateIP_CIDR_RouterOS(subscribeGroup []*SubscribeRuleGroup)
 
 			var timeout int
 			if group.subscribe.isOnlineSubscribe {
-				timeout = int(wh.config.HttpListRenewalInterval.Seconds())
+				timeout = int(wh.config.HttpListRenewalInterval.Seconds() - 1)
 			} else {
-				timeout = int(wh.config.FileListRenewalInterval.Seconds())
+				timeout = int(wh.config.FileListRenewalInterval.Seconds() - 1)
 			}
 
 			comment := group.subscribe.Url
