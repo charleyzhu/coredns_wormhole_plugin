@@ -2,13 +2,15 @@
  * @Author: Charley
  * @Date: 2021-08-17 17:30:46
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-20 15:32:12
+ * @LastEditTime: 2021-08-23 16:27:35
  * @FilePath: /coredns/plugin/wormhole/proxy.go
  * @Description: 转发代理
  */
 package wormhole
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/coredns/coredns/plugin/pkg/transport"
@@ -27,7 +29,22 @@ type Proxy struct {
 }
 
 func (p *Proxy) Query(m *dns.Msg) (*dns.Msg, time.Duration, error) {
-	return p.Client.Exchange(m, p.host)
+	if len(m.Question) > 0 {
+		domain := m.Question[0].Name
+		if strings.HasPrefix(domain, "https://") {
+			domain = strings.Replace(domain, "https://", "", 1)
+			m.Question[0].Name = domain
+		}
+
+		if strings.HasPrefix(domain, "http://") {
+			domain = strings.Replace(domain, "http://", "", 1)
+			m.Question[0].Name = domain
+		}
+
+		return p.Client.Exchange(m, p.host)
+	}
+	return m, 0, fmt.Errorf("query question length error")
+
 }
 
 // func (p *Proxy) Healthcheck() {

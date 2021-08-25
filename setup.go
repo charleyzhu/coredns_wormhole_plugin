@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-13 11:48:18
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-23 10:29:20
+ * @LastEditTime: 2021-08-25 08:32:34
  * @FilePath: /coredns/plugin/wormhole/setup.go
  * @Description: 配置读取配置文件初始化插件
  */
@@ -216,8 +216,5 @@ func (c *Wormhole) OnStartup() (err error) {
 
 // OnShutdown stops all configured proxies.
 func (c *Wormhole) OnShutdown() error {
-	// for _, p := range f.proxies {
-	// 	p.stop()
-	// }
 	return nil
 }

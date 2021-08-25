@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-13 11:53:13
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-23 11:26:49
+ * @LastEditTime: 2021-08-25 10:46:07
  * @FilePath: /coredns/plugin/wormhole/wormhole.go
  * @Description: 插件主题结构
  */
@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strconv"
 
 	"sort"
 	"sync"
@@ -78,7 +79,7 @@ func (wh *Wormhole) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	for _, rule := range wh.RuleList {
 		if rule.Match(r) {
 			log.Debugf("match rule type:%s payload:%s", rule.RuleType(), rule.Payload())
-			return plugin.NextOrFailure(pluginName, wh.Next, ctx, w, r)
+			return wh.QueryAndWriteMsg(ctx, w, r)
 		}
 	}
 	return plugin.NextOrFailure(pluginName, wh.Next, ctx, w, r)
@@ -108,9 +109,9 @@ func (wh *Wormhole) QueryAndWriteMsg(ctx context.Context, w dns.ResponseWriter, 
 	}
 
 	if wh.ros != nil {
-		err := wh.ros.AddAddress(msg)
+		err := wh.ros.AddDnsMsgAddress(msg)
 		if err != nil {
-			log.Errorf("Add %s to ros %s find error:%s", msg, wh.ros.config.Host, err)
+			log.Errorf("%s", err)
 		}
 	}
 
@@ -243,6 +244,9 @@ func (wh *Wormhole) handleFileUpdate() {
 	fileSubscribeGroup, fileIgnoreSubscribeGroup := wh.getFilterFileSubscribeList()
 	updateFileSubscribeGroup(fileSubscribeGroup)
 	updateFileSubscribeGroup(fileIgnoreSubscribeGroup)
+	if wh.ros != nil {
+		wh.updateIP_CIDR_RouterOS(fileSubscribeGroup)
+	}
 }
 
 func (wh *Wormhole) runHttpUpdater() {
@@ -262,44 +266,37 @@ func (wh *Wormhole) runHttpUpdater() {
 
 func (wh *Wormhole) handleHTTPListUpdate() {
 	log.Infof("Updating and Persisting HTTP lists...")
-	wh.getFilterHttpSubscribeList()
+
 	httpSubscribeGroup, httpIgnoreSubscribeGroup := wh.getFilterHttpSubscribeList()
 	updateHttpSubscribeList(httpSubscribeGroup)
 	updateHttpSubscribeList(httpIgnoreSubscribeGroup)
 
-	// failCount := 0
-	// for failCount < u.RetryCount {
+	if wh.ros != nil {
+		wh.updateIP_CIDR_RouterOS(httpSubscribeGroup)
+	}
 
-	// 	whitelist, blacklist, err := u.fetchHTTPLists()
-	// 	if err != nil {
-	// 		log.Errorf("Attempt %d/%d failed. Error %q", failCount+1, u.RetryCount, err.Error())
-	// 		failCount++
-	// 		time.Sleep(u.RetryDelay)
-	// 		continue
-	// 	}
-	// 	u.Plugin.blacklist = blacklist
-	// 	u.Plugin.whitelist = whitelist
+}
 
-	// 	lastUpdate := time.Now()
-	// 	u.lastUpdate = &lastUpdate
+func (wh *Wormhole) updateIP_CIDR_RouterOS(subscribeGroup []*SubscribeRuleGroup) {
+	for _, group := range subscribeGroup {
+		ipcidrList := group.ip_CIDRList
+		for _, cidrRule := range ipcidrList {
+			target := cidrRule.Payload()
 
-	// 	if u.persistLists {
-	// 		persistedList := StoredListConfiguration{
-	// 			UpdateTimestamp: int(time.Now().Unix()),
-	// 			BlacklistURLs:   u.Plugin.config.BlacklistURLs,
-	// 			WhitelistURLs:   u.Plugin.config.WhitelistURLs,
-	// 			Blacklist:       blacklist,
-	// 			Whitelist:       whitelist,
-	// 		}
+			var timeout int
+			if group.subscribe.isOnlineSubscribe {
+				timeout = int(wh.config.HttpListRenewalInterval.Seconds())
+			} else {
+				timeout = int(wh.config.FileListRenewalInterval.Seconds())
+			}
 
-	// 		err := persistedList.Persist(u.persistencePath)
-	// 		if err == nil {
-	// 			u.lastPersistenceUpdate = time.Now()
-	// 		} else {
-	// 			log.Error("Persisting HTTP Lists failed.")
-	// 		}
-	// 	}
-	// 	log.Info("Lists with HTTP URLs have been updated")
-	// 	break
-	// }
+			comment := group.subscribe.Url
+			if wh.ros != nil {
+				err := wh.ros.AddCIDRAddress(target, strconv.Itoa(timeout), comment)
+				if err != nil {
+					log.Errorf("%s", err)
+				}
+			}
+		}
+	}
 }

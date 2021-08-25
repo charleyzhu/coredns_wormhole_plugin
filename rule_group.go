@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-20 09:14:33
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-20 14:48:10
+ * @LastEditTime: 2021-08-25 10:09:38
  * @FilePath: /coredns/plugin/wormhole/rule_group.go
  * @Description: 规则组
  */
@@ -15,8 +15,9 @@ import (
 )
 
 type SubscribeRuleGroup struct {
-	subscribe SubscribeFile
-	ruleGroup []Rule
+	subscribe   SubscribeFile
+	ruleGroup   []Rule
+	ip_CIDRList []RuleIPCIDR
 
 	lastUpdateTime time.Time
 
@@ -75,13 +76,14 @@ func (srg *SubscribeRuleGroup) updateHandelWithFormUrl() error {
 		return err
 	}
 	if srg.subscribe.FileType == SubscribeFileTypeClash {
-		rList, err := parseClashRules(content)
+		rList, cidrList, err := parseClashRules(content)
 		if err != nil {
 			log.Warningf("Load Http Subscribe %s parse Clash Rules error %s", srg.subscribe.Url, err)
 			return err
 		}
 		srg.lastUpdateTime = time.Now()
 		srg.ruleGroup = rList
+		srg.ip_CIDRList = cidrList
 
 	} else if srg.subscribe.FileType == SubscribeFileTypeDnsmasq {
 		rList, err := parseDnsmasqRules(content)
@@ -91,6 +93,7 @@ func (srg *SubscribeRuleGroup) updateHandelWithFormUrl() error {
 		}
 		srg.lastUpdateTime = time.Now()
 		srg.ruleGroup = rList
+
 	}
 	return nil
 }
@@ -103,13 +106,15 @@ func (srg *SubscribeRuleGroup) updateHandelWithFormFile() error {
 	}
 
 	if srg.subscribe.FileType == SubscribeFileTypeClash {
-		rList, err := parseClashRules(content)
+		rList, cidrList, err := parseClashRules(content)
 		if err != nil {
 			log.Warningf("load Subscribe %s parse Clash Rules error %s", srg.subscribe.Url, err)
 			return err
 		}
 		srg.lastUpdateTime = time.Now()
 		srg.ruleGroup = rList
+		srg.ip_CIDRList = cidrList
+
 	} else if srg.subscribe.FileType == SubscribeFileTypeDnsmasq {
 		rList, err := parseDnsmasqRules(content)
 		if err != nil {

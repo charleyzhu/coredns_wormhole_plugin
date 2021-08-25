@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-17 08:57:54
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-19 16:35:35
+ * @LastEditTime: 2021-08-25 10:05:25
  * @FilePath: /coredns/plugin/wormhole/rule_type.go
  * @Description: 匹配规则类型
  */
@@ -15,6 +15,7 @@ const (
 	RuleTypeRegex
 	RuleTypeSubscribeGroup
 	RuleTypeStaticGroup
+	RuleTypeIPCIDR
 	RuleTypeUnknown
 )
 
@@ -34,6 +35,8 @@ func (r RuleType) String() string {
 		return "SubscribeGroup"
 	case RuleTypeStaticGroup:
 		return "StaticGroup"
+	case RuleTypeIPCIDR:
+		return "RuleTypeIP-CIDR"
 	default:
 		return "Unknown"
 	}

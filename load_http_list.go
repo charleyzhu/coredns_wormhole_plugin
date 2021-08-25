@@ -2,7 +2,7 @@
  * @Author: Charley
  * @Date: 2021-08-18 17:45:45
  * @LastEditors: Charley
- * @LastEditTime: 2021-08-20 14:18:57
+ * @LastEditTime: 2021-08-25 10:08:15
  * @FilePath: /coredns/plugin/wormhole/load_http_list.go
  * @Description: 加载订阅文件
  */
@@ -113,12 +113,6 @@ func loadDomainListFormUrl(url string) ([]byte, error) {
 }
 
 func loadDomainListFormFile(url string) ([]byte, error) {
-	// if !filepath.IsAbs(url) {
-	// 	url = filepath.Join(
-	// 		filepath.Dir(c.File()),
-	// 		url,
-	// 	)
-	// }
 
 	log.Infof("Load Subscribe Form file:%s", url)
 
@@ -129,26 +123,30 @@ func loadDomainListFormFile(url string) ([]byte, error) {
 	return content, nil
 }
 
-func parseClashRules(yamlContent []byte) ([]Rule, error) {
+func parseClashRules(yamlContent []byte) ([]Rule, []RuleIPCIDR, error) {
 	clashRuleFile := &ClashRuleFile{}
 	err := yaml.Unmarshal(yamlContent, clashRuleFile)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var ruleList []Rule
+	var cidrList []RuleIPCIDR
 	for _, ruleLine := range clashRuleFile.Payload {
 
 		rule, err := parseClashRulesLine(ruleLine)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if rule == nil {
 			continue
 		}
-
-		ruleList = append(ruleList, rule)
+		if rule.RuleType() == RuleTypeIPCIDR {
+			cidrList = append(cidrList, rule.(RuleIPCIDR))
+		} else {
+			ruleList = append(ruleList, rule)
+		}
 	}
-	return ruleList, nil
+	return ruleList, cidrList, nil
 }
 
 func parseClashRulesLine(ruleLine string) (Rule, error) {
@@ -171,6 +169,9 @@ func parseClashRulesLine(ruleLine string) (Rule, error) {
 
 	case "DOMAIN":
 		rule = NewRuleDomain(payload)
+
+	case "IP-CIDR":
+		rule = NewRuleIPCIDR(payload)
 
 	}
 	return rule, nil
