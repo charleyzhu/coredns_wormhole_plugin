@@ -78,7 +78,7 @@ func (wh *Wormhole) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	for _, rule := range wh.RuleList {
 		if rule.Match(r) {
 			log.Debugf("match rule type:%s payload:%s", rule.RuleType(), rule.Payload())
-			return plugin.NextOrFailure(pluginName, wh.Next, ctx, w, r)
+			return wh.QueryAndWriteMsg(ctx, w, r)
 		}
 	}
 	return plugin.NextOrFailure(pluginName, wh.Next, ctx, w, r)
